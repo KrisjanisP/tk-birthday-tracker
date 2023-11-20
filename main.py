@@ -36,7 +36,8 @@ ttk.Label(add_tab, text="This is the add tab").\
 
 listbox = tk.Listbox(display_tab, bd=0, highlightthickness=0)
 listbox.grid(column=0, pady=10, row=1)
-listbox.insert(tk.END, "Hello World")
+for row in events.load_birthdays():
+    listbox.insert(tk.END, ''.join(row))
 
 ttk.Label(add_tab, text="Person's Name:").\
 grid(column=0, row=1, pady=5, sticky="w")
