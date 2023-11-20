@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import *
 from tkinter import messagebox, ttk
+import re
 # from ttkthemes import ThemedTk
+import events
 import os
 
 if os.name == 'nt':  # 'nt' indicates Windows
@@ -11,7 +13,7 @@ if os.name == 'nt':  # 'nt' indicates Windows
 # root = ThemedTk(theme='adapta')
 root = Tk()
 root.title("My Birthday Tracker")
-root.geometry('500x400')  # Set the window size
+root.geometry('600x400')  # Set the window size
 root.resizable(False, False)  # Disable resizing
 style = ttk.Style(root)
 style.theme_use("clam")  # Use the "clam" theme for a more modern look
@@ -36,7 +38,7 @@ listbox = tk.Listbox(display_tab, bd=0, highlightthickness=0)
 listbox.grid(column=0, pady=10, row=1)
 listbox.insert(tk.END, "Hello World")
 
-ttk.Label(add_tab, text="Friend's Name:").\
+ttk.Label(add_tab, text="Person's Name:").\
 grid(column=0, row=1, pady=5, sticky="w")
 name_entry = ttk.Entry(add_tab)
 name_entry.grid(column=1, row=1, pady=5, sticky="w")
@@ -51,22 +53,16 @@ birthday_entry.grid(column=1, row=2, pady=5, sticky="w")
 def add_birthday():
     name = name_entry.get()
     birthday = birthday_entry.get()
+    # YYYY/MM/DD uz YYYY-MM-DD
+    birthday = birthday.replace('/','-')
+    birthday = birthday.strip()
+    if not re.match(r'^\d{4}-\d{2}-\d{2}$', birthday):
+        messagebox.showerror("Error", "Invalid date!")
+        return
+    year = birthday[:4]
+
+    events.save_birthday(name, birthday)
     messagebox.showinfo("Success", "Birthday added successfully!")
-    return
-    if name and birthday:  # Check if the name and birthday fields are not empty
-        # Load existing data
-        with open(data_file, 'r') as file:
-            birthdays = json.load(file)
-        birthdays[name] = birthday
-        # Save updated data
-        with open(data_file, 'w') as file:
-            json.dump(birthdays, file)
-        messagebox.showinfo("Success", "Birthday added successfully!")
-        name_entry.delete(0, tk.END)
-        birthday_entry.delete(0, tk.END)
-        refresh_listbox()
-    else:
-        messagebox.showerror("Error", "Name and birthday must be filled out")
 
 add_button = ttk.Button(add_tab, text="Add Birthday", command=add_birthday)
 add_button.grid(column=1, row=4, pady=20, sticky="e")
