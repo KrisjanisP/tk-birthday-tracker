@@ -1,72 +1,74 @@
-import tkinter as tk
-from tkinter import *
-from tkinter import messagebox, ttk
-import re
-# from ttkthemes import ThemedTk
+from PySide6.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QListWidget, QMessageBox
+from PySide6.QtCore import Qt
 import events
-import os
+import re
+import sys
 
-if os.name == 'nt':  # 'nt' indicates Windows
-    from ctypes import windll
-    windll.shcore.SetProcessDpiAwareness(1)
+class BirthdayTracker(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Dzimšanas dienu kalendārs")
+        self.setGeometry(100, 100, 600, 400)  # x, y, width, height
 
-# root = ThemedTk(theme='adapta')
-root = Tk()
-root.title("My Birthday Tracker")
-root.geometry('600x400')  # Set the window size
-root.resizable(False, False)  # Disable resizing
-style = ttk.Style(root)
-style.theme_use("clam")  # Use the "clam" theme for a more modern look
-# style.theme_use("adapta")  # Use the "clam" theme for a more modern look
+        # Create the tab widget
+        tab_control = QTabWidget()
+        display_tab = QWidget()
+        add_tab = QWidget()
 
-tab_control = ttk.Notebook(root)
-display_tab = ttk.Frame(tab_control)
-add_tab = ttk.Frame(tab_control)
+        # Add tabs
+        tab_control.addTab(display_tab, "Display")
+        tab_control.addTab(add_tab, "Add Birthday")
 
-tab_control.add(display_tab, text="Display", padding=10)
-tab_control.add(add_tab, text="Add birthday", padding=10)
+        self.setCentralWidget(tab_control)
 
-tab_control.pack(expand=1, fill="both", padx=10, pady=10)
+        # Display tab layout
+        display_layout = QVBoxLayout()
+        self.listbox = QListWidget()
+        display_layout.addWidget(QLabel("This is the display tab"))
+        display_layout.addWidget(self.listbox)
+        display_tab.setLayout(display_layout)
 
-display_label = ttk.Label(display_tab, text="This is the display tab")
-display_label.grid(column=0, row=0, pady=10, sticky="w")
+        # Populate listbox
+        for row in events.load_birthdays():
+            self.listbox.addItem(''.join(row))
 
-ttk.Label(add_tab, text="This is the add tab").\
-    grid(column=0, row=0, padx=30, pady=30)
+        # Add tab layout
+        add_layout = QVBoxLayout()
+        add_layout.addWidget(QLabel("This is the add tab"))
 
-listbox = tk.Listbox(display_tab, bd=0, highlightthickness=0)
-listbox.grid(column=0, pady=10, row=1)
-for row in events.load_birthdays():
-    listbox.insert(tk.END, ''.join(row))
+        # Name
+        self.name_entry = QLineEdit()
+        add_layout.addWidget(QLabel("Person's Name:"))
+        add_layout.addWidget(self.name_entry)
 
-ttk.Label(add_tab, text="Person's Name:").\
-grid(column=0, row=1, pady=5, sticky="w")
-name_entry = ttk.Entry(add_tab)
-name_entry.grid(column=1, row=1, pady=5, sticky="w")
+        # Birthday
+        self.birthday_entry = QLineEdit()
+        add_layout.addWidget(QLabel("Birthday (YYYY/MM/DD):"))
+        add_layout.addWidget(self.birthday_entry)
 
-ttk.Label(add_tab, text="Birthday (YYYY/MM/DD):").\
-grid(column=0, row=2, pady=5, sticky="w")
-birthday_entry = ttk.Entry(add_tab)
-birthday_entry.grid(column=1, row=2, pady=5, sticky="w")
+        # Add button
+        add_button = QPushButton("Add Birthday")
+        add_button.clicked.connect(self.add_birthday)
+        add_layout.addWidget(add_button)
 
+        add_tab.setLayout(add_layout)
 
-# Function to add a birthday to the list
-def add_birthday():
-    name = name_entry.get()
-    birthday = birthday_entry.get()
-    # YYYY/MM/DD uz YYYY-MM-DD
-    birthday = birthday.replace('/','-')
-    birthday = birthday.strip()
-    if not re.match(r'^\d{4}-\d{2}-\d{2}$', birthday):
-        messagebox.showerror("Error", "Invalid date!")
-        return
-    year = birthday[:4]
+    def add_birthday(self):
+        name = self.name_entry.text()
+        birthday = self.birthday_entry.text()
+        birthday = birthday.replace('/', '-')
+        birthday = birthday.strip()
 
-    events.save_birthday(name, birthday)
-    messagebox.showinfo("Success", "Birthday added successfully!")
+        if not re.match(r'^\d{4}-\d{2}-\d{2}$', birthday):
+            QMessageBox.critical(self, "Error", "Invalid date!")
+            return
 
-add_button = ttk.Button(add_tab, text="Add Birthday", command=add_birthday)
-add_button.grid(column=1, row=4, pady=20, sticky="e")
+        events.save_birthday(name, birthday)
+        QMessageBox.information(self, "Success", "Birthday added successfully!")
+        self.listbox.addItem(f"{name} - {birthday}")
 
-
-root.mainloop()
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    mainWin = BirthdayTracker()
+    mainWin.show()
+    sys.exit(app.exec())
