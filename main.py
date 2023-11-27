@@ -15,8 +15,19 @@ class BirthdayTracker(QMainWindow):
         tab_control.addTab(display_tab, "Display")
         tab_control.addTab(insert_tab, "Insert")
 
-        self.setCentralWidget(tab_control)
+        insert_layout = QVBoxLayout()
+        
+        self.calendar = QCalendarWidget()
+        self.calendar.selectionChanged.connect(self.date_changed)
+        insert_layout.addWidget(self.calendar)
 
+        insert_tab.setLayout(insert_layout)
+
+        self.setCentralWidget(tab_control)
+    
+    def date_changed(self):
+        selected_date = self.calendar.selectedDate()
+        print("Date selected:", selected_date.toString())
 
 app = QApplication()
 
